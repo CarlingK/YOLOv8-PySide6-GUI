@@ -190,7 +190,7 @@ class YoloPredictor(BasePredictor, QObject):
                                 class_nums += 1
 
                         # save img or video result
-                        if self.save_res:
+                        if self.save_res and self.plotted_img is not None:
                             self.save_preds(vid_cap, i, str(self.save_dir / p.name))
 
                         # Send test results
