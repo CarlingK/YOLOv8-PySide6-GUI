@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'home.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -36,7 +36,7 @@ class Ui_MainWindow(object):
         self.Main_QF = QFrame(self.Main_QW)
         self.Main_QF.setObjectName(u"Main_QF")
         self.Main_QF.setStyleSheet(u"QFrame#Main_QF{\n"
-"	background-color: qlineargradient(x0:0, y0:1, x1:1, y1:1,stop:0.4  rgb(107, 128, 210), stop:1 rgb(180, 140, 255));\n"
+"	background-color: qlineargradient(x0:0, y0:1, x1:1, y1:1,stop:0.4  rgb(0, 0, 0), stop:1 rgb(180, 140, 255));\n"
 "border:0px solid red;\n"
 "border-radius:30px\n"
 "}")
@@ -76,7 +76,7 @@ class Ui_MainWindow(object):
         self.logo.setSizePolicy(sizePolicy)
         self.logo.setMinimumSize(QSize(50, 50))
         self.logo.setMaximumSize(QSize(50, 50))
-        self.logo.setStyleSheet(u"image: url(:/all/img/logo.png);\n"
+        self.logo.setStyleSheet(u"image: url(:/all/img/logo2.png);\n"
 "border:2px solid rgb(255, 255, 255);\n"
 "border-radius:10px")
         self.Author = QLabel(self.TopLogoInfo)
@@ -146,13 +146,7 @@ class Ui_MainWindow(object):
 "QPushButton:hover{\n"
 "background-color: rgba(114, 129, 214, 59);\n"
 "}")
-        icon = QIcon()
-        iconThemeName = u"zoom-out"
-        if QIcon.hasThemeIcon(iconThemeName):
-            icon = QIcon.fromTheme(iconThemeName)
-        else:
-            icon.addFile(u".", QSize(), QIcon.Normal, QIcon.Off)
-
+        icon = QIcon(QIcon.fromTheme(u"zoom-out"))
         self.ToggleBotton.setIcon(icon)
         self.ToggleBotton.setAutoDefault(False)
         self.ToggleBotton.setFlat(False)
@@ -221,6 +215,7 @@ class Ui_MainWindow(object):
 
         self.src_rtsp_button = QPushButton(self.MenuBox)
         self.src_rtsp_button.setObjectName(u"src_rtsp_button")
+        self.src_rtsp_button.setEnabled(True)
         self.src_rtsp_button.setMinimumSize(QSize(0, 45))
         self.src_rtsp_button.setCursor(QCursor(Qt.PointingHandCursor))
         self.src_rtsp_button.setAutoFillBackground(False)
@@ -233,7 +228,7 @@ class Ui_MainWindow(object):
 "\n"
 "text-align: center;\n"
 "padding-left: 0px;\n"
-"color: rgba(255, 255, 255, 199);\n"
+"color: rgba(255, 255, 255, 0);\n"
 "font: 700 12pt \"Nirmala UI\";\n"
 "}\n"
 "\n"
@@ -1081,17 +1076,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_15.addWidget(self.ToggleBotton_2)
 
-        self.frame = QFrame(self.IOU_QF)
-        self.frame.setObjectName(u"frame")
-        sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
-        self.frame.setSizePolicy(sizePolicy)
-        self.frame.setMinimumSize(QSize(0, 20))
-        self.frame.setMaximumSize(QSize(16777215, 20))
-        self.horizontalLayout_10 = QHBoxLayout(self.frame)
+        self.frame_3 = QFrame(self.IOU_QF)
+        self.frame_3.setObjectName(u"frame_3")
+        sizePolicy.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
+        self.frame_3.setSizePolicy(sizePolicy)
+        self.frame_3.setMinimumSize(QSize(0, 20))
+        self.frame_3.setMaximumSize(QSize(16777215, 20))
+        self.horizontalLayout_10 = QHBoxLayout(self.frame_3)
         self.horizontalLayout_10.setSpacing(10)
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
         self.horizontalLayout_10.setContentsMargins(8, 0, 10, 0)
-        self.iou_spinbox = QDoubleSpinBox(self.frame)
+        self.iou_spinbox = QDoubleSpinBox(self.frame_3)
         self.iou_spinbox.setObjectName(u"iou_spinbox")
         self.iou_spinbox.setCursor(QCursor(Qt.PointingHandCursor))
         self.iou_spinbox.setStyleSheet(u"QDoubleSpinBox {\n"
@@ -1127,7 +1122,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_10.addWidget(self.iou_spinbox)
 
-        self.iou_slider = QSlider(self.frame)
+        self.iou_slider = QSlider(self.frame_3)
         self.iou_slider.setObjectName(u"iou_slider")
         self.iou_slider.setCursor(QCursor(Qt.PointingHandCursor))
         self.iou_slider.setStyleSheet(u"QSlider::groove:horizontal {\n"
@@ -1156,7 +1151,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_10.addWidget(self.iou_slider)
 
 
-        self.verticalLayout_15.addWidget(self.frame)
+        self.verticalLayout_15.addWidget(self.frame_3)
 
 
         self.verticalLayout_22.addWidget(self.IOU_QF)
@@ -1203,17 +1198,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_18.addWidget(self.ToggleBotton_3)
 
-        self.frame1 = QFrame(self.Conf_QF)
-        self.frame1.setObjectName(u"frame1")
-        sizePolicy.setHeightForWidth(self.frame1.sizePolicy().hasHeightForWidth())
-        self.frame1.setSizePolicy(sizePolicy)
-        self.frame1.setMinimumSize(QSize(0, 20))
-        self.frame1.setMaximumSize(QSize(16777215, 20))
-        self.horizontalLayout_11 = QHBoxLayout(self.frame1)
+        self.frame = QFrame(self.Conf_QF)
+        self.frame.setObjectName(u"frame")
+        sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
+        self.frame.setSizePolicy(sizePolicy)
+        self.frame.setMinimumSize(QSize(0, 20))
+        self.frame.setMaximumSize(QSize(16777215, 20))
+        self.horizontalLayout_11 = QHBoxLayout(self.frame)
         self.horizontalLayout_11.setSpacing(10)
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
         self.horizontalLayout_11.setContentsMargins(8, 0, 10, 0)
-        self.conf_spinbox = QDoubleSpinBox(self.frame1)
+        self.conf_spinbox = QDoubleSpinBox(self.frame)
         self.conf_spinbox.setObjectName(u"conf_spinbox")
         self.conf_spinbox.setCursor(QCursor(Qt.PointingHandCursor))
         self.conf_spinbox.setStyleSheet(u"QDoubleSpinBox {\n"
@@ -1249,7 +1244,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_11.addWidget(self.conf_spinbox)
 
-        self.conf_slider = QSlider(self.frame1)
+        self.conf_slider = QSlider(self.frame)
         self.conf_slider.setObjectName(u"conf_slider")
         self.conf_slider.setCursor(QCursor(Qt.PointingHandCursor))
         self.conf_slider.setStyleSheet(u"QSlider::groove:horizontal {\n"
@@ -1278,7 +1273,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_11.addWidget(self.conf_slider)
 
 
-        self.verticalLayout_18.addWidget(self.frame1)
+        self.verticalLayout_18.addWidget(self.frame)
 
 
         self.verticalLayout_22.addWidget(self.Conf_QF)
@@ -1567,7 +1562,7 @@ class Ui_MainWindow(object):
         self.src_cam_button.setText(QCoreApplication.translate("MainWindow", u"Camera", None))
         self.src_rtsp_button.setText(QCoreApplication.translate("MainWindow", u"Rtsp", None))
         self.VersionLabel.setText(QCoreApplication.translate("MainWindow", u"Version: 2.0", None))
-        self.explain_title.setText(QCoreApplication.translate("MainWindow", u"YoloSide App  \u2013  A Graphical User Interface For YoloV8", None))
+        self.explain_title.setText(QCoreApplication.translate("MainWindow", u"Yolov8 Detection", None))
         self.settings_button.setText("")
         self.min_sf.setText("")
         self.max_sf.setText("")

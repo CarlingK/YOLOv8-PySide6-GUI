@@ -34,7 +34,7 @@
      <widget class="QFrame" name="Main_QF">
       <property name="styleSheet">
        <string notr="true">QFrame#Main_QF{
-	background-color: qlineargradient(x0:0, y0:1, x1:1, y1:1,stop:0.4  rgb(107, 128, 210), stop:1 rgb(180, 140, 255));
+	background-color: qlineargradient(x0:0, y0:1, x1:1, y1:1,stop:0.4  rgb(0, 0, 0), stop:1 rgb(180, 140, 255));
 border:0px solid red;
 border-radius:30px
 }</string>
@@ -146,7 +146,7 @@ border-radius:30px
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">image: url(:/all/img/logo.png);
+              <string notr="true">image: url(:/all/img/logo2.png);
 border:2px solid rgb(255, 255, 255);
 border-radius:10px</string>
              </property>
@@ -321,8 +321,7 @@ background-color: rgba(114, 129, 214, 59);
                 <string>Hide</string>
                </property>
                <property name="icon">
-                <iconset theme="zoom-out">
-                 <normaloff>.</normaloff>.</iconset>
+                <iconset theme="zoom-out"/>
                </property>
                <property name="autoDefault">
                 <bool>false</bool>
@@ -447,6 +446,9 @@ background-color: rgba(114, 129, 214, 59);
              </item>
              <item>
               <widget class="QPushButton" name="src_rtsp_button">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -469,7 +471,7 @@ border-left: 23px solid transparent;
 
 text-align: center;
 padding-left: 0px;
-color: rgba(255, 255, 255, 199);
+color: rgba(255, 255, 255, 0);
 font: 700 12pt &quot;Nirmala UI&quot;;
 }
 
@@ -635,7 +637,7 @@ background-color: rgba(255, 255, 255,0);
                 <string notr="true">font: 700 italic 11pt &quot;Segoe UI&quot;;</string>
                </property>
                <property name="text">
-                <string>YoloSide App  –  A Graphical User Interface For YoloV8</string>
+                <string>Yolov8 Detection</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -1845,7 +1847,7 @@ QPushButton:hover{
                      <string/>
                     </property>
                     <property name="icon">
-                     <iconset>
+                     <iconset resource="resources.qrc">
                       <normaloff>:/all/img/begin.png</normaloff>
                       <normalon>:/all/img/pause.png</normalon>:/all/img/begin.png</iconset>
                     </property>
@@ -2093,8 +2095,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
                       <string>Model</string>
                      </property>
                      <property name="icon">
-                      <iconset theme="zoom-out">
-                       <normaloff>.</normaloff>.</iconset>
+                      <iconset theme="zoom-out"/>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
@@ -2274,8 +2275,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
                       <string>IOU</string>
                      </property>
                      <property name="icon">
-                      <iconset theme="zoom-out">
-                       <normaloff>.</normaloff>.</iconset>
+                      <iconset theme="zoom-out"/>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
@@ -2502,8 +2502,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
                       <string>Conf</string>
                      </property>
                      <property name="icon">
-                      <iconset theme="zoom-out">
-                       <normaloff>.</normaloff>.</iconset>
+                      <iconset theme="zoom-out"/>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
@@ -2730,8 +2729,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
                       <string>Delay(ms)</string>
                      </property>
                      <property name="icon">
-                      <iconset theme="zoom-out">
-                       <normaloff>.</normaloff>.</iconset>
+                      <iconset theme="zoom-out"/>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
@@ -2958,8 +2956,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
                       <string>Save</string>
                      </property>
                      <property name="icon">
-                      <iconset theme="zoom-out">
-                       <normaloff>.</normaloff>.</iconset>
+                      <iconset theme="zoom-out"/>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>

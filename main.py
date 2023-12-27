@@ -1,11 +1,12 @@
-from ultralytics.yolo.engine.predictor import BasePredictor
-from ultralytics.yolo.engine.results import Results
-from ultralytics.yolo.utils import DEFAULT_CFG, LOGGER, SETTINGS, callbacks, ops
-from ultralytics.yolo.utils.plotting import Annotator, colors, save_one_box
-from ultralytics.yolo.utils.torch_utils import smart_inference_mode
-from ultralytics.yolo.utils.files import increment_path
-from ultralytics.yolo.utils.checks import check_imshow
-from ultralytics.yolo.cfg import get_cfg
+from ultralytics.engine.predictor import BasePredictor
+from ultralytics.engine.results import Results
+from ultralytics.utils import DEFAULT_CFG, LOGGER, SETTINGS, callbacks, ops
+from ultralytics.utils.plotting import Annotator, colors, save_one_box
+from ultralytics.utils.torch_utils import smart_inference_mode
+from ultralytics.utils.files import increment_path
+from ultralytics.utils.checks import check_imshow
+from ultralytics.cfg import get_cfg
+from ultralytics.data.loaders import LoadStreams
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu
 from PySide6.QtGui import QImage, QPixmap, QColor
 from PySide6.QtCore import QTimer, QThread, Signal, QObject, QPoint, Qt
@@ -91,7 +92,7 @@ class YoloPredictor(BasePredictor, QObject):
 
             # set source
             self.setup_source(self.source if self.source is not None else self.args.source)
-
+            is_webcam = self.dataset.source_type.webcam
             # Check save path/label
             if self.save_res or self.save_txt:
                 (self.save_dir / 'labels' if self.save_txt else self.save_dir).mkdir(parents=True, exist_ok=True)
@@ -131,7 +132,7 @@ class YoloPredictor(BasePredictor, QObject):
                     batch = next(self.dataset)  # next data
 
                     self.batch = batch
-                    path, im, im0s, vid_cap, s = batch
+                    path, im0s, vid_cap, s = batch
                     visualize = increment_path(self.save_dir / Path(path).stem, mkdir=True) if self.args.visualize else False
 
                     # Calculation completion and frame rate (to be optimized)
@@ -147,7 +148,7 @@ class YoloPredictor(BasePredictor, QObject):
                     
                     # preprocess 
                     with self.dt[0]:
-                        im = self.preprocess(im)
+                        im = self.preprocess(im0s)
                         if len(im.shape) == 3:
                             im = im[None]  # expand for batch dim
                     # inference 
@@ -164,8 +165,11 @@ class YoloPredictor(BasePredictor, QObject):
                             'preprocess': self.dt[0].dt * 1E3 / n,
                             'inference': self.dt[1].dt * 1E3 / n,
                             'postprocess': self.dt[2].dt * 1E3 / n}
-                        p, im0 = (path[i], im0s[i].copy()) if self.source_type.webcam or self.source_type.from_img \
-                            else (path, im0s.copy())
+                        # p, im0 = (path[i], im0s[i].copy()) if self.source_type.webcam or self.source_type.from_img \
+                        #     else (path, im0s.copy())
+                        # print(im0s[i])
+                        p, im0 = path[i], None if self.source_type.tensor else im0s[i].copy(
+                        )
                         p = Path(p)     # the source dir
 
                         # s:::   video 1/1 (6/6557) 'path':
@@ -190,8 +194,16 @@ class YoloPredictor(BasePredictor, QObject):
                             self.save_preds(vid_cap, i, str(self.save_dir / p.name))
 
                         # Send test results
-                        self.yolo2main_res_img.emit(im0) # after detection
-                        self.yolo2main_pre_img.emit(im0s if isinstance(im0s, np.ndarray) else im0s[0])   # Before testing
+                        # self.yolo2main_res_img.emit(im0) # after detection
+                        # self.yolo2main_pre_img.emit(im0s if isinstance(im0s, np.ndarray) else im0s[0])   # Before testing
+                        if self.plotted_img is None:
+                            self.yolo2main_res_img.emit(im0)
+                        else:
+                            self.yolo2main_res_img.emit(self.plotted_img)
+                            self.plotted_img = None
+                        
+                        self.yolo2main_pre_img.emit(im0)
+                        
                         # self.yolo2main_labels.emit(self.labels_dict)        # webcam need to change the def write_results
                         self.yolo2main_class_num.emit(class_nums)
                         self.yolo2main_target_num.emit(target_nums)
@@ -202,29 +214,21 @@ class YoloPredictor(BasePredictor, QObject):
                     self.yolo2main_progress.emit(self.progress_value)   # progress bar
 
                 # Detection completed
-                if count + 1 >= all_count:
-                    if isinstance(self.vid_writer[-1], cv2.VideoWriter):
-                        self.vid_writer[-1].release()  # release final video writer
-                    self.yolo2main_status_msg.emit('Detection completed')
-                    break
+                if not is_webcam:
+                    if count + 1 >= all_count:
+                        if isinstance(self.vid_writer[-1], cv2.VideoWriter):
+                            self.vid_writer[-1].release()  # release final video writer
+                        self.yolo2main_status_msg.emit('Detection completed')
+                        break
 
         except Exception as e:
-            pass
             print(e)
             self.yolo2main_status_msg.emit('%s' % e)
+            raise e
 
-
-    def get_annotator(self, img):
-        return Annotator(img, line_width=self.args.line_thickness, example=str(self.model.names))
-
-    def preprocess(self, img):
-        img = torch.from_numpy(img).to(self.model.device)
-        img = img.half() if self.model.fp16 else img.float()  # uint8 to fp16/32
-        img /= 255  # 0 - 255 to 0.0 - 1.0
-        return img
-
-    def postprocess(self, preds, img, orig_img):
-        ### important
+    
+    def postprocess(self, preds, img, orig_imgs):
+        """Post-processes predictions and returns a list of Results objects."""
         preds = ops.non_max_suppression(preds,
                                         self.conf_thres,
                                         self.iou_thres,
@@ -232,65 +236,66 @@ class YoloPredictor(BasePredictor, QObject):
                                         max_det=self.args.max_det,
                                         classes=self.args.classes)
 
+        if not isinstance(orig_imgs, list):  # input images are a torch.Tensor, not a list
+            orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
+
         results = []
         for i, pred in enumerate(preds):
-            orig_img = orig_img[i] if isinstance(orig_img, list) else orig_img
-            shape = orig_img.shape
-            pred[:, :4] = ops.scale_boxes(img.shape[2:], pred[:, :4], shape).round()
-            path, _, _, _, _ = self.batch
-            img_path = path[i] if isinstance(path, list) else path
-            results.append(Results(orig_img=orig_img, path=img_path, names=self.model.names, boxes=pred))
-        # print(results)
+            orig_img = orig_imgs[i]
+            pred[:, :4] = ops.scale_boxes(
+                img.shape[2:], pred[:, :4], orig_img.shape)
+            img_path = self.batch[0][i]
+            results.append(Results(orig_img, path=img_path,
+                           names=self.model.names, boxes=pred))
         return results
 
     def write_results(self, idx, results, batch):
-        p, im, im0 = batch
+        """Write inference results to a file or directory."""
+        p, im, _ = batch
         log_string = ''
         if len(im.shape) == 3:
             im = im[None]  # expand for batch dim
-        self.seen += 1
-        imc = im0.copy() if self.args.save_crop else im0
-        if self.source_type.webcam or self.source_type.from_img:  # batch_size >= 1         # attention
-            log_string += f'{idx}: '
+        if self.source_type.webcam or self.source_type.from_img or self.source_type.tensor:  # batch_size >= 1
+            # log_string += f'{idx}: '
             frame = self.dataset.count
         else:
             frame = getattr(self.dataset, 'frame', 0)
         self.data_path = p
-        self.txt_path = str(self.save_dir / 'labels' / p.stem) + ('' if self.dataset.mode == 'image' else f'_{frame}')
-        # log_string += '%gx%g ' % im.shape[2:]         # !!! don't add img size~
-        self.annotator = self.get_annotator(im0)
-
-        det = results[idx].boxes  # TODO: make boxes inherit from tensors
-
+        self.txt_path = str(self.save_dir / 'labels' / p.stem) + \
+            ('' if self.dataset.mode == 'image' else f'_{frame}')
+        # log_string += '%gx%g ' % im.shape[2:]  # print string
+        result = results[idx]
+        
+        det = results[idx].boxes
         if len(det) == 0:
             return f'{log_string}(no detections), ' # if no, send this~~
 
         for c in det.cls.unique():
             n = (det.cls == c).sum()  # detections per class
-            log_string += f"{n}~{self.model.names[int(c)]},"   #   {'s' * (n > 1)}, "   # don't add 's'
-        # now log_string is the classes 👆
+            log_string += f"{n}~{self.model.names[int(c)]},"
 
-
-        # write
-        for d in reversed(det):
-            cls, conf = d.cls.squeeze(), d.conf.squeeze()
-            if self.save_txt:  # Write to file
-                line = (cls, *(d.xywhn.view(-1).tolist()), conf) \
-                    if self.args.save_conf else (cls, *(d.xywhn.view(-1).tolist()))  # label format
-                with open(f'{self.txt_path}.txt', 'a') as f:
-                    f.write(('%g ' * len(line)).rstrip() % line + '\n')
-            if self.save_res or self.args.save_crop or self.args.show or True:  # Add bbox to image(must)
-                c = int(cls)  # integer class
-                name = f'id:{int(d.id.item())} {self.model.names[c]}' if d.id is not None else self.model.names[c]
-                label = None if self.args.hide_labels else (name if self.args.hide_conf else f'{name} {conf:.2f}')
-                self.annotator.box_label(d.xyxy.squeeze(), label, color=colors(c, True))
-            if self.args.save_crop:
-                save_one_box(d.xyxy,
-                             imc,
-                             file=self.save_dir / 'crops' / self.model.model.names[c] / f'{self.data_path.stem}.jpg',
-                             BGR=True)
+        if self.args.save or self.args.show:  # Add bbox to image
+            plot_args = {
+                'line_width': self.args.line_width,
+                'boxes': self.args.show_boxes,
+                'conf': self.args.show_conf,
+                'labels': self.args.show_labels}
+            if not self.args.retina_masks:
+                plot_args['im_gpu'] = im[idx]
+            self.plotted_img = result.plot(**plot_args)
+        # Write
+        if self.args.save_txt:
+            result.save_txt(f'{self.txt_path}.txt',
+                            save_conf=self.args.save_conf)
+        if self.args.save_crop:
+            result.save_crop(save_dir=self.save_dir / 'crops',
+                             file_name=self.data_path.stem + ('' if self.dataset.mode == 'image' else f'_{frame}'))
 
         return log_string
+    
+    def stop_cam(self):
+        if isinstance(self.dataset, LoadStreams):
+            self.dataset.close()
         
 
 
@@ -313,7 +318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # read model folder
         self.pt_list = os.listdir('./models')
-        self.pt_list = [file for file in self.pt_list if file.endswith('.pt')]
+        self.pt_list = [file for file in self.pt_list if file.endswith('.pt') or file.endswith('.onnx')]
         self.pt_list.sort(key=lambda x: os.path.getsize('./models/' + x))   # sort by file size
         self.model_box.clear()
         self.model_box.addItems(self.pt_list)
@@ -355,6 +360,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Select detection source
         self.src_file_button.clicked.connect(self.open_src_file)  # select local file
         # self.src_cam_button.clicked.connect(self.show_status("The function has not yet been implemented."))#chose_cam
+        self.src_cam_button.clicked.connect(self.chose_cam)
         # self.src_rtsp_button.clicked.connect(self.show_status("The function has not yet been implemented."))#chose_rtsp
 
         # start testing button
@@ -367,6 +373,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ToggleBotton.clicked.connect(lambda: UIFuncitons.toggleMenu(self, True))   # left navigation button
         self.settings_button.clicked.connect(lambda: UIFuncitons.settingBox(self, True))   # top right settings button
         
+        self.src_rtsp_button.hide()
         # initialization
         self.load_config()
 
@@ -397,6 +404,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         except Exception as e:
             print(repr(e))
+            raise e
 
     # Control start/pause
     def run_or_continue(self):
@@ -502,6 +510,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         except Exception as e:
             self.show_status('%s' % e)
+            raise e
 
     # select network source
     def chose_rtsp(self):
@@ -598,6 +607,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.yolo_thread.isRunning():
             self.yolo_thread.quit()         # end thread
         self.yolo_predict.stop_dtc = True
+        self.yolo_predict.stop_cam()
         self.run_button.setChecked(False)    # start key recovery
         self.save_res_button.setEnabled(True)   # Ability to use the save button
         self.save_txt_button.setEnabled(True)   # Ability to use the save button
@@ -650,7 +660,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # Cycle monitoring model file changes
     def ModelBoxRefre(self):
         pt_list = os.listdir('./models')
-        pt_list = [file for file in pt_list if file.endswith('.pt')]
+        pt_list = [file for file in pt_list if file.endswith(
+            '.pt') or file.endswith('.onnx')]
         pt_list.sort(key=lambda x: os.path.getsize('./models/' + x))
         # It must be sorted before comparing, otherwise the list will be refreshed all the time
         if pt_list != self.pt_list:

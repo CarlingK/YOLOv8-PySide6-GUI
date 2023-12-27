@@ -17,6 +17,7 @@
     <file>img/file.png</file>
     <file>img/cam.png</file>
     <file>img/logo.png</file>
+    <file>img/logo2.png</file>
     <file>img/RTSP.png</file>
   </qresource>
 </RCC>
